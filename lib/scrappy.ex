@@ -23,7 +23,7 @@ defmodule Scrappy do
   def show_progress(flow, total) do
     flow
     |> Flow.partition(stages: 1)
-    |> Flow.reduce(fn -> 0 end, fn (:ok, count) ->
+    |> Flow.reduce(fn -> 0 end, fn (_, count) ->
       ProgressBar.render(count + 1, total, suffix: :count)
       count + 1
     end)
@@ -33,7 +33,7 @@ defmodule Scrappy do
     if tries > 50, do: throw("too many retries: #{url}")
     if tries > 0, do: :timer.sleep(min(tries, 10) * 1000)
 
-    options = [ssl: [{:versions, [:'tlsv1.2']}], follow_redirect: true]
+    options = [ssl: [versions: [:"tlsv1.2"]], follow_redirect: true]
 
     case HTTPoison.get(url, [{"Accept-Encoding", "gzip"}], options) do
       {:ok, response} ->
