@@ -5,22 +5,37 @@ defmodule Scrappy do
 
   @spec bulk_download(Enumerable.t(), integer()) :: nil
   def bulk_download(download_tasks, parallelism \\ 20) do
-    num_download_tasks = length(download_tasks)
-
     download_tasks
     |> Flow.from_enumerable()
     |> Flow.partition(max_demand: parallelism, stages: parallelism)
     |> Flow.map(&download/1)
+  end
+
+  def bulk_save_files(flow) do
+    flow
+    |> Flow.map(fn {body, out_path} ->
+      {:ok, file} = File.open(out_path, [:write])
+      :ok = IO.binwrite(file, body)
+      :ok = File.close(file)
+    end)
+  end
+
+  def show_progress(flow, total) do
+    flow
     |> Flow.partition(stages: 1)
-    |> Flow.reduce(fn -> 0 end, &Scrappy.show_progress(&1, &2, num_download_tasks))
-    |> Flow.run()
+    |> Flow.reduce(fn -> 0 end, fn (:ok, count) ->
+      ProgressBar.render(count + 1, total, suffix: :count)
+      count + 1
+    end)
   end
 
   defp download({url, out_path} = datum, tries \\ 1) do
     if tries > 50, do: throw("too many retries: #{url}")
     if tries > 0, do: :timer.sleep(min(tries, 10) * 1000)
 
-    case HTTPoison.get(url, [{"Accept-Encoding", "gzip"}]) do
+    options = [ssl: [{:versions, [:'tlsv1.2']}], follow_redirect: true]
+
+    case HTTPoison.get(url, [{"Accept-Encoding", "gzip"}], options) do
       {:ok, response} ->
         case response.status_code do
           429 ->
@@ -44,9 +59,7 @@ defmodule Scrappy do
                 response.body
               end
 
-            {:ok, file} = File.open(out_path, [:write])
-            :ok = IO.binwrite(file, body)
-            :ok = File.close(file)
+            {body, out_path}
 
           # response.headers
           # |> List.keyfind("X-RateLimit-Remaining", 0)
@@ -60,10 +73,5 @@ defmodule Scrappy do
       {:error, %{reason: :timeout}} ->
         download(datum, tries + 1)
     end
-  end
-
-  def show_progress(:ok, count, total_count) do
-    ProgressBar.render(count + 1, total_count, suffix: :count)
-    count + 1
   end
 end
