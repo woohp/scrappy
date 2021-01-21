@@ -29,7 +29,7 @@ defmodule Scrappy do
     end)
   end
 
-  defp download({url, out_path} = datum, tries \\ 1) do
+  defp download({url, out_path} = datum, tries \\ 0) do
     if tries > 50, do: throw("too many retries: #{url}")
     if tries > 0, do: :timer.sleep(min(tries, 10) * 1000)
 
