@@ -3,7 +3,8 @@ defmodule Scrappy do
   Documentation for Scrappy.
   """
 
-  @spec bulk_download(Enumerable.t(), integer()) :: nil
+  @spec bulk_download(Enumerable.t({binary(), binary()}), integer()) :: Flow.t()
+  @spec bulk_download(Enumerable.t({binary(), binary()})) :: Flow.t()
   def bulk_download(download_tasks, parallelism \\ 20) do
     download_tasks
     |> Flow.from_enumerable()
@@ -11,6 +12,7 @@ defmodule Scrappy do
     |> Flow.map(&download/1)
   end
 
+  @spec bulk_save_files(Flow.t()) :: Flow.t()
   def bulk_save_files(flow) do
     flow
     |> Flow.map(fn {body, out_path} ->
@@ -20,10 +22,11 @@ defmodule Scrappy do
     end)
   end
 
+  @spec show_progress(Flow.t(), integer()) :: Flow.t()
   def show_progress(flow, total) do
     flow
     |> Flow.partition(stages: 1)
-    |> Flow.reduce(fn -> 0 end, fn (_, count) ->
+    |> Flow.reduce(fn -> 0 end, fn _, count ->
       ProgressBar.render(count + 1, total, suffix: :count)
       count + 1
     end)

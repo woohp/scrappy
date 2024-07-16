@@ -5,7 +5,7 @@ defmodule ScrappyTest do
   test "download and save files" do
     download_tasks = [
       {"google.com", "google.com"},
-      {"yahoo.com", "yahoo.com"},
+      {"yahoo.com", "yahoo.com"}
     ]
 
     download_tasks

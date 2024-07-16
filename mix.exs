@@ -4,8 +4,8 @@ defmodule Scrappy.MixProject do
   def project do
     [
       app: :scrappy,
-      version: "0.1.0",
-      elixir: "~> 1.8",
+      version: "0.2.0",
+      elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -21,8 +21,8 @@ defmodule Scrappy.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:flow, "~> 0.14"},
-      {:httpoison, "~> 1.5"},
+      {:flow, "~> 1.2"},
+      {:httpoison, "~> 2.2"},
       {:progress_bar, "> 0.0.0"}
     ]
   end
